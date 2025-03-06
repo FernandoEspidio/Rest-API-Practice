@@ -24,13 +24,19 @@ export const getItem = async (req, res) => {
 export const postItem = async (req, res) => {
     const pool = await sqlConnect();
 
-    const data = await pool.request()
+    await pool.request()
         .input("name", sql.VarChar, req.body.name)
         .input("price", sql.Float, req.body.price)
         .query("insert into items (name, price) values (@name, @price)");
+    
+    const data = await pool
+        .request()
+        .input("name", sql.VarChar, req.body.name)
+        .query("select * from items where name = @name");
+
 
     //console.log(data.recordset);
-    res.status(200).json({operation:true});
+    res.status(200).json({operation:true, item: data.recordset[0]});
 };
 
 export const putItem = async (req, res) => {

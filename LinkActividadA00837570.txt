@@ -1,1 +1,8 @@
+Fernando Espidio Santamaria
+A00837570
+
+Link a Backend
 https://github.com/FernandoEspidio/Rest-API-Practice
+
+Link a Frontend
+https://github.com/FernandoEspidio/TC3004_A00837570_react

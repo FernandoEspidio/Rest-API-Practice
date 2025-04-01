@@ -1,29 +1,6 @@
 import {sqlConnect, sql} from "../utils/sql.js"
-
-/*
-export const login = async (req, res) => {
-    const pool = await sqlConnect();
-
-    const data = await pool
-        .request()
-        .input("username", sql.VarChar, req.body.username)
-        .query("select * from users where username=@username")
-
-    //console.log(data.recordset);
-    if (data.recordset.length === 0) {
-        return res.status(404).json({ isLogin: false, message: "Usuario no encontrado" });
-    }
-    
-    let isLogin = data.recordset[0].password === req.body.password
-
-    if(isLogin) {
-        res.status(400).json({isLogin: isLogin, user: data.recordset[0]});
-    }else {
-        res.status(400).json({isLogin: isLogin, user: {}});
-    }
-
-};
-*/
+import crypto from 'crypto';
+import { hashPassword, verifyPassword } from '../utils/cryptoUtils.js';
 
 export const login = async (req, res) => {
     try {
@@ -34,7 +11,13 @@ export const login = async (req, res) => {
             .query("SELECT * FROM users WHERE username=@username");
 
         if (data.recordset.length > 0) {
-            const isLogin = data.recordset[0].password === req.body.password;
+            
+            const hashedPassword = data.recordset[0].password;
+
+            const isLogin = verifyPassword(hashedPassword, req.body.password);
+
+            //const isLogin = data.recordset[0].password === req.body.passwsord;
+
             if (isLogin) {
                 res.status(200).json({ isLogin: true, user: data.recordset[0] });
             } else {
@@ -52,10 +35,12 @@ export const login = async (req, res) => {
 export const signin = async (req, res) => {
     const pool = await sqlConnect();
 
+    const hashedPassword = hashPassword(req.body.password);
+
     const data = await pool.request()
         .input("name", sql.VarChar, req.body.name)
         .input("username", sql.VarChar, req.body.username)
-        .input("password", sql.VarChar, req.body.password)
+        .input("password", sql.VarChar, hashedPassword)
 
         .query("insert into users (name, username, password) values (@name, @username, @password)");
 
@@ -99,11 +84,17 @@ export const deleteUser = async (req, res) => {
 export const putUser = async (req, res) => {
     const pool = await sqlConnect();
 
+    let hashedPassword = req.body.password;
+
+    if (req.body.password) {
+        hashedPassword = hashPassword(req.body.password);
+    }
+
     const data = await pool.request()
         .input("myId", sql.Int, req.params.id)
         .input("name", sql.VarChar, req.body.name)
         .input("username", sql.VarChar, req.body.username)
-        .input("password", sql.VarChar, req.body.password)
+        .input("password", sql.VarChar, hashedPassword)
         .query("update users set name=@name, username=@username, password=@password where id=@myId");
 
     //console.log(data.recordset);

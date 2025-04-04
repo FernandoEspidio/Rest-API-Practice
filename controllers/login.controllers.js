@@ -1,6 +1,7 @@
 import {sqlConnect, sql} from "../utils/sql.js"
 import crypto from 'crypto';
 import { hashPassword, verifyPassword } from '../utils/cryptoUtils.js';
+import jwt from "jsonwebtoken";
 
 export const login = async (req, res) => {
     try {
@@ -19,7 +20,10 @@ export const login = async (req, res) => {
             //const isLogin = data.recordset[0].password === req.body.passwsord;
 
             if (isLogin) {
-                res.status(200).json({ isLogin: true, user: data.recordset[0] });
+
+                const token = jwt.sign({sub:data.recordset[0].id}, process.env.JWT, {expiresIn: "1h"});
+
+                res.status(200).json({ isLogin: true, user: data.recordset[0], token: token});
             } else {
                 res.status(401).json({ isLogin: false, message: 'Incorrect password' });
             }
